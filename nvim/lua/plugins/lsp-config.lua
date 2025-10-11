@@ -8,20 +8,19 @@ return {
         "L3MON4D3/LuaSnip",
     },
     config = function()
-        local lspconfig = require("lspconfig")
         local cmp = require("cmp")
         local capabilities = require("cmp_nvim_lsp").default_capabilities()
 
         -- Mason setup
         require("mason").setup()
         require("mason-lspconfig").setup({
-            ensure_installed = { "pyright", "lua_ls" },
+            ensure_installed = { "pyright", "lua_ls", "hls" },
         })
 
-        -- 🔹 Show diagnostic messages inline + in popup
+        -- Diagnostics config
         vim.diagnostic.config({
             virtual_text = {
-                prefix = "●", -- any symbol you like
+                prefix = "●",
                 source = "if_many",
             },
             signs = true,
@@ -30,23 +29,43 @@ return {
             severity_sort = true,
         })
 
-        -- 🔹 Keymap to open full error in float
         vim.keymap.set("n", "<leader>e", vim.diagnostic.open_float, { desc = "Show error message" })
 
-        -- Python LSP
-        lspconfig.pyright.setup({
+        -- Use the new LSP config / enable API
+
+        -- Python server
+        vim.lsp.config("pyright", {
             capabilities = capabilities,
         })
 
-        -- Lua LSP (Neovim config development)
-        lspconfig.lua_ls.setup({
+        -- Haskell LSP
+        vim.lsp.config("hls", {
             capabilities = capabilities,
             settings = {
-                Lua = {
-                    diagnostics = { globals = { "vim" } },
+                haskell = {
+                    formattingProvider = "ormolu", -- or "fourmolu", "brittany", etc.
+                    plugin = {
+                        rename = { globalOn = true },
+                        hlint = { diagnosticsOn = true },
+                    },
                 },
             },
         })
+
+        -- Lua server
+        vim.lsp.config("lua_ls", {
+            capabilities = capabilities,
+            settings = {
+                Lua = {
+                    diagnostics = {
+                        globals = { "vim" },
+                    },
+                },
+            },
+        })
+
+        -- Actually enable the servers
+        vim.lsp.enable({ "pyright", "lua_ls" })
 
         -- Autocompletion setup
         cmp.setup({
